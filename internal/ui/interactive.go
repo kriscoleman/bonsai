@@ -14,26 +14,80 @@ import (
 )
 
 var (
+	// Bonsai color palette
+	bonsaiGreen  = lipgloss.Color("#2D5016") // Deep forest green
+	leafGreen    = lipgloss.Color("#7FB069") // Fresh leaf green
+	trunkBrown   = lipgloss.Color("#8B4513") // Warm trunk brown
+	accentPurple = lipgloss.Color("#C792EA") // Charm purple accent
+	softCyan     = lipgloss.Color("#89DDFF") // Soft cyan highlight
+	mutedGray    = lipgloss.Color("#8F8F8F") // Elegant gray
+	warningRed   = lipgloss.Color("#FF6B6B") // Gentle warning red
+	successGreen = lipgloss.Color("#51CF66") // Success green
+
+	// Bonsai tree ASCII art for header
+	bonsaiHeader = `
+   ╭─────────────────────────────────────────────╮
+   │         🌳  The Art of Pruning  🌳          │
+   │                                             │
+   │        "Cultivate with intention"           │
+   ╰─────────────────────────────────────────────╯
+`
+
 	titleStyle = lipgloss.NewStyle().
 			Bold(true).
-			Foreground(lipgloss.Color("12")).
-			MarginLeft(2)
+			Foreground(leafGreen).
+			MarginLeft(2).
+			MarginTop(1)
+
+	headerStyle = lipgloss.NewStyle().
+			Foreground(softCyan).
+			Align(lipgloss.Center).
+			Bold(true)
 
 	itemStyle = lipgloss.NewStyle().
-			PaddingLeft(4)
+			PaddingLeft(4).
+			Foreground(lipgloss.Color("252"))
 
 	selectedItemStyle = lipgloss.NewStyle().
 				PaddingLeft(2).
-				Foreground(lipgloss.Color("10"))
+				Foreground(leafGreen).
+				Bold(true)
+
+	branchNameStyle = lipgloss.NewStyle().
+			Foreground(softCyan).
+			Bold(true)
+
+	ageStyle = lipgloss.NewStyle().
+			Foreground(mutedGray).
+			Italic(true)
+
+	authorStyle = lipgloss.NewStyle().
+			Foreground(accentPurple)
+
+	commitMsgStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("246"))
 
 	paginationStyle = list.DefaultStyles().PaginationStyle.
-			PaddingLeft(4)
+			PaddingLeft(4).
+			Foreground(mutedGray)
 
 	helpStyle = list.DefaultStyles().HelpStyle.
 			PaddingLeft(4).
-			PaddingBottom(1)
+			PaddingBottom(1).
+			Foreground(mutedGray)
 
-	quitTextStyle = lipgloss.NewStyle().Margin(1, 0, 2, 4)
+	quitTextStyle = lipgloss.NewStyle().
+			Margin(1, 0, 2, 4).
+			Foreground(leafGreen)
+
+	deletingStyle = lipgloss.NewStyle().
+			Margin(1, 0, 2, 4).
+			Foreground(warningRed).
+			Bold(true)
+
+	successStyle = lipgloss.NewStyle().
+			Foreground(successGreen).
+			Bold(true)
 )
 
 type branchItem struct {
@@ -46,13 +100,21 @@ func (i branchItem) FilterValue() string {
 }
 
 func (i branchItem) Title() string {
-	checkbox := "[ ]"
+	checkbox := "○"
+	checkboxColor := mutedGray
 	if i.selected {
-		checkbox = "[✓]"
+		checkbox = "●"
+		checkboxColor = leafGreen
 	}
 
+	checkboxStyle := lipgloss.NewStyle().Foreground(checkboxColor).Bold(true)
 	age := formatAge(i.branch.Age())
-	return fmt.Sprintf("%s %s (%s)", checkbox, i.branch.FullName(), age)
+
+	return fmt.Sprintf("%s %s %s",
+		checkboxStyle.Render(checkbox),
+		branchNameStyle.Render(i.branch.FullName()),
+		ageStyle.Render("("+age+")"),
+	)
 }
 
 func (i branchItem) Description() string {
@@ -60,7 +122,17 @@ func (i branchItem) Description() string {
 	if len(commitMsg) > 80 {
 		commitMsg = commitMsg[:77] + "..."
 	}
-	return fmt.Sprintf("  %s - %s", i.branch.LastAuthor, commitMsg)
+
+	// Use emoji for visual flair
+	authorPrefix := "👤"
+	commitPrefix := "💬"
+
+	return fmt.Sprintf("  %s %s  %s %s",
+		authorPrefix,
+		authorStyle.Render(i.branch.LastAuthor),
+		commitPrefix,
+		commitMsgStyle.Render(commitMsg),
+	)
 }
 
 type model struct {
@@ -149,16 +221,61 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	if m.quitting {
 		if m.message != "" {
-			return quitTextStyle.Render(m.message)
+			// Create an elegant exit message with proper box alignment
+			content := successStyle.Render("✓ " + m.message)
+
+			box := lipgloss.NewStyle().
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(softCyan).
+				Padding(0, 1).
+				MarginTop(1).
+				MarginBottom(1)
+
+			return "\n" + box.Render(content) + "\n"
 		}
-		return quitTextStyle.Render("Cancelled.")
+
+		cancelMsg := lipgloss.NewStyle().
+			Foreground(mutedGray).
+			Italic(true).
+			Render("Pruning session cancelled. Repository unchanged.")
+
+		return "\n  " + cancelMsg + "\n"
 	}
 
 	if m.deleting {
-		return quitTextStyle.Render("Deleting branches...")
+		spinner := "🌀"
+		deleteMsg := fmt.Sprintf("%s Carefully pruning selected branches...", spinner)
+
+		return deletingStyle.Render("\n" + deleteMsg + "\n")
 	}
 
-	return "\n" + m.list.View()
+	// Show the header with bonsai art
+	header := headerStyle.Render(bonsaiHeader)
+
+	// Get selected count
+	selectedCount := 0
+	for _, item := range m.items {
+		if item.selected {
+			selectedCount++
+		}
+	}
+
+	statusBar := ""
+	if selectedCount > 0 {
+		statusBar = lipgloss.NewStyle().
+			Foreground(leafGreen).
+			Bold(true).
+			MarginLeft(2).
+			Render(fmt.Sprintf("🌿 %d branch(es) selected for pruning", selectedCount))
+	} else {
+		statusBar = lipgloss.NewStyle().
+			Foreground(mutedGray).
+			Italic(true).
+			MarginLeft(2).
+			Render("Select branches to prune with space/x • a = all • n = none • enter/d = delete")
+	}
+
+	return fmt.Sprintf("\n%s\n\n%s\n\n%s\n", header, m.list.View(), statusBar)
 }
 
 func (m model) getSelectedBranches() []*git.Branch {
@@ -244,7 +361,14 @@ func RunInteractiveSelection(repo *git.Repository, branches []*git.Branch, isRem
 	const listHeight = 20
 
 	l := list.New(items, itemDelegate{}, defaultWidth, listHeight)
-	l.Title = "Select branches to delete"
+
+	// Elegant title with bonsai metaphor
+	branchType := "local"
+	if isRemote {
+		branchType = "remote"
+	}
+	l.Title = fmt.Sprintf("🌿 Branches ready for pruning (%s)", branchType)
+
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(true)
 	l.Styles.Title = titleStyle

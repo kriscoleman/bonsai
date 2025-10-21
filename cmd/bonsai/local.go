@@ -19,9 +19,13 @@ var (
 
 var localCmd = &cobra.Command{
 	Use:   "local",
-	Short: "Clean up local branches",
-	Long:  `Identify and clean up stale local Git branches.`,
-	RunE:  runLocalCleanup,
+	Short: "🌿 Prune stale local branches",
+	Long: `🌿 Prune stale local branches
+
+Carefully identify and remove local branches that are no longer actively growing.
+Just as a bonsai master shapes their tree with intention, maintain your repository
+with precision and care.`,
+	RunE: runLocalCleanup,
 }
 
 func init() {
@@ -57,8 +61,23 @@ func runLocalCleanup(cmd *cobra.Command, args []string) error {
 	staleBranches := filterStaleBranches(branches, ageThreshold)
 
 	if len(staleBranches) == 0 {
-		successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("10")).Bold(true)
-		fmt.Println(successStyle.Render("✓ No stale local branches found!"))
+		// Bonsai-themed success message
+		successStyle := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#7FB069")).
+			Bold(true)
+
+		successBox := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#89DDFF")).
+			Padding(0, 1).
+			MarginTop(1).
+			MarginBottom(1)
+
+		content := lipgloss.JoinVertical(lipgloss.Left,
+			"🌳 Your repository is perfectly maintained!",
+			"   No stale branches found - a true work of art.")
+
+		fmt.Println(successBox.Render(successStyle.Render(content)))
 		return nil
 	}
 
@@ -100,25 +119,63 @@ func filterStaleBranches(branches []*git.Branch, threshold time.Duration) []*git
 }
 
 func printBranchSummary(branches []*git.Branch, branchType string, threshold time.Duration, dryRun bool) {
-	titleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("12")).
-		MarginBottom(1)
+	// Bonsai-themed colors
+	leafGreen := lipgloss.Color("#7FB069")
+	softCyan := lipgloss.Color("#89DDFF")
+	mutedGray := lipgloss.Color("#8F8F8F")
+	warningYellow := lipgloss.Color("#FFD43B")
 
-	infoStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
-	warningStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("11"))
+	warningStyle := lipgloss.NewStyle().
+		Foreground(warningYellow).
+		Bold(true)
 
-	title := fmt.Sprintf("Found %d stale %s branch(es)", len(branches), branchType)
+	infoStyle := lipgloss.NewStyle().
+		Foreground(mutedGray).
+		Italic(true)
+
+	// Build the header content
+	icon := "🌿"
 	if dryRun {
-		title += " [DRY RUN]"
+		icon = "👁️"
 	}
 
-	fmt.Println(titleStyle.Render(title))
-	fmt.Println(infoStyle.Render(fmt.Sprintf("Age threshold: %v", threshold)))
-	fmt.Println()
+	title := fmt.Sprintf("%s Discovered %d stale %s branch(es)", icon, len(branches), branchType)
+	if dryRun {
+		title += " [PREVIEW MODE]"
+	}
+
+	info := fmt.Sprintf("Pruning threshold: %v", threshold)
+
+	// Style each line
+	titleStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(leafGreen)
+
+	infoStyled := lipgloss.NewStyle().
+		Foreground(mutedGray).
+		Italic(true)
+
+	// Render and join
+	headerContent := lipgloss.JoinVertical(lipgloss.Left,
+		titleStyle.Render(title),
+		infoStyled.Render(info))
+
+	headerBox := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(softCyan).
+		Padding(0, 1).
+		MarginTop(1).
+		MarginBottom(1)
+
+	fmt.Println(headerBox.Render(headerContent))
 
 	if !dryRun {
-		fmt.Println(warningStyle.Render("⚠ These branches will be deleted"))
+		warning := "⚠️  These branches are ready for careful pruning"
+		fmt.Println(warningStyle.Render(warning))
+		fmt.Println()
+	} else {
+		preview := "Preview mode: no changes will be made to your repository"
+		fmt.Println(infoStyle.Render(preview))
 		fmt.Println()
 	}
 }
@@ -126,12 +183,21 @@ func printBranchSummary(branches []*git.Branch, branchType string, threshold tim
 func runBulkDeletion(repo *git.Repository, branches []*git.Branch, isRemote bool) error {
 	// Confirm bulk deletion
 	if !confirmBulkDeletion(len(branches)) {
-		fmt.Println("Deletion cancelled.")
+		cancelStyle := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#8F8F8F")).
+			Italic(true)
+		fmt.Println(cancelStyle.Render("🍃 Pruning cancelled. Your repository remains untouched."))
 		return nil
 	}
 
-	successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
-	errorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
+	successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#51CF66"))
+	errorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF6B6B"))
+
+	// Progress header
+	progressStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#7FB069")).
+		Bold(true)
+	fmt.Println(progressStyle.Render("🌀 Pruning in progress...\n"))
 
 	successCount := 0
 	errorCount := 0
@@ -145,24 +211,58 @@ func runBulkDeletion(repo *git.Repository, branches []*git.Branch, isRemote bool
 		}
 
 		if err != nil {
-			fmt.Println(errorStyle.Render(fmt.Sprintf("✗ Failed to delete %s: %v", branch.FullName(), err)))
+			fmt.Println(errorStyle.Render(fmt.Sprintf("  ✗ Failed to prune %s: %v", branch.FullName(), err)))
 			errorCount++
 		} else {
-			fmt.Println(successStyle.Render(fmt.Sprintf("✓ Deleted %s", branch.FullName())))
+			fmt.Println(successStyle.Render(fmt.Sprintf("  ✓ Pruned %s", branch.FullName())))
 			successCount++
 		}
 	}
 
-	fmt.Println()
-	fmt.Printf("Summary: %d deleted, %d failed\n", successCount, errorCount)
+	// Summary box
+	summaryStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#7FB069")).
+		Bold(true)
+
+	summaryBox := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#89DDFF")).
+		Padding(0, 1).
+		MarginTop(1).
+		MarginBottom(1)
+
+	content := lipgloss.JoinVertical(lipgloss.Left,
+		"🌳 Pruning complete!",
+		fmt.Sprintf("   %d branches removed, %d failed", successCount, errorCount))
+
+	fmt.Println(summaryBox.Render(summaryStyle.Render(content)))
 
 	return nil
 }
 
 func confirmBulkDeletion(count int) bool {
-	warningStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("11")).Bold(true)
+	// Beautiful confirmation prompt with bonsai metaphor
+	warningStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#FFD43B")).
+		Bold(true)
 
-	fmt.Println(warningStyle.Render(fmt.Sprintf("⚠ This will delete %d branch(es). Are you sure? (y/N)", count)))
+	warningBox := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#FFD43B")).
+		Padding(0, 1).
+		MarginTop(1).
+		MarginBottom(1)
+
+	promptStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#89DDFF")).
+		Italic(true)
+
+	content := lipgloss.JoinVertical(lipgloss.Left,
+		fmt.Sprintf("⚠️  Ready to prune %d branch(es)", count),
+		"   This action cannot be undone.")
+
+	fmt.Println(warningBox.Render(warningStyle.Render(content)))
+	fmt.Print(promptStyle.Render("Proceed with pruning? (y/N) "))
 
 	var response string
 	fmt.Scanln(&response)

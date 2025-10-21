@@ -19,9 +19,13 @@ var (
 
 var remoteCmd = &cobra.Command{
 	Use:   "remote",
-	Short: "Clean up remote branches",
-	Long:  `Identify and clean up stale remote Git branches.`,
-	RunE:  runRemoteCleanup,
+	Short: "🌍 Prune stale remote branches",
+	Long:  `🌍 Prune stale remote branches
+
+Identify and carefully remove remote branches that have stopped growing.
+Maintain your shared repository with the same dedication and artistry
+as tending to a cherished bonsai tree.`,
+	RunE: runRemoteCleanup,
 }
 
 func init() {
@@ -58,8 +62,23 @@ func runRemoteCleanup(cmd *cobra.Command, args []string) error {
 	staleBranches := filterStaleBranches(branches, ageThreshold)
 
 	if len(staleBranches) == 0 {
-		successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("10")).Bold(true)
-		fmt.Println(successStyle.Render("✓ No stale remote branches found!"))
+		// Bonsai-themed success message
+		successStyle := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#7FB069")).
+			Bold(true)
+
+		successBox := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#89DDFF")).
+			Padding(0, 1).
+			MarginTop(1).
+			MarginBottom(1)
+
+		content := lipgloss.JoinVertical(lipgloss.Left,
+			fmt.Sprintf("🌳 Your %s remote is perfectly maintained!", remoteName),
+			"   No stale branches found - a true work of art.")
+
+		fmt.Println(successBox.Render(successStyle.Render(content)))
 		return nil
 	}
 
