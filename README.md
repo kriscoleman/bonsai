@@ -9,6 +9,8 @@
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://go.dev)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE.md)
 [![Built with Charm](https://img.shields.io/badge/Built%20with-Charm%20%F0%9F%92%9C-ff69b4)](https://charm.sh/)
+[![GitHub Release](https://img.shields.io/github/v/release/kriscoleman/bonsai)](https://github.com/kriscoleman/bonsai/releases)
+[![Tests](https://github.com/kriscoleman/bonsai/actions/workflows/test.yml/badge.svg)](https://github.com/kriscoleman/bonsai/actions/workflows/test.yml)
 
 ---
 
@@ -83,10 +85,36 @@ Optimized Git operations handle repositories with hundreds of branches without b
 
 ### Installation
 
+**Pre-built Binaries (Recommended):**
+
+Visit the [latest release](https://github.com/kriscoleman/bonsai/releases/latest) or download for your platform:
+
+```bash
+# macOS (Apple Silicon)
+curl -LO https://github.com/kriscoleman/bonsai/releases/latest/download/bonsai_Darwin_arm64.tar.gz
+tar -xzf bonsai_Darwin_arm64.tar.gz
+sudo mv bonsai /usr/local/bin/
+
+# macOS (Intel)
+curl -LO https://github.com/kriscoleman/bonsai/releases/latest/download/bonsai_Darwin_x86_64.tar.gz
+tar -xzf bonsai_Darwin_x86_64.tar.gz
+sudo mv bonsai /usr/local/bin/
+
+# Linux (x86_64)
+curl -LO https://github.com/kriscoleman/bonsai/releases/latest/download/bonsai_Linux_x86_64.tar.gz
+tar -xzf bonsai_Linux_x86_64.tar.gz
+sudo mv bonsai /usr/local/bin/
+
+# Linux (ARM64)
+curl -LO https://github.com/kriscoleman/bonsai/releases/latest/download/bonsai_Linux_arm64.tar.gz
+tar -xzf bonsai_Linux_arm64.tar.gz
+sudo mv bonsai /usr/local/bin/
+```
+
 **From Source:**
 
 ```bash
-git clone https://github.com/kriscoleman-testifysec/bonsai.git
+git clone https://github.com/kriscoleman/bonsai.git
 cd bonsai
 make install
 
@@ -135,6 +163,8 @@ bonsai remote --bulk --age 4w
 **Age Thresholds** - Define "stale" on your terms:
 
 ```bash
+bonsai local --age 1y      # 1 year old
+bonsai local --age 12M     # 12 months old
 bonsai local --age 1w      # 1 week old
 bonsai local --age 7d      # 7 days old (equivalent)
 bonsai remote --age 30d    # 30 days old
@@ -142,7 +172,7 @@ bonsai remote --age 720h   # 720 hours old (equivalent)
 ```
 
 **Supported Time Units:**
-`w` (weeks) • `d` (days) • `h` (hours) • `m` (minutes) • `s` (seconds)
+`y` (years) • `M` (months, uppercase) • `w` (weeks) • `d` (days) • `h` (hours) • `m` (minutes, lowercase) • `s` (seconds)
 
 **Remote Options** - Work with any remote:
 

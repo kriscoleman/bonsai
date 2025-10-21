@@ -9,9 +9,7 @@ import (
 
 var (
 	// Color palette inspired by bonsai aesthetics
-	bonsaiGreen  = lipgloss.Color("#2D5016") // Deep forest green
 	leafGreen    = lipgloss.Color("#7FB069") // Fresh leaf green
-	trunkBrown   = lipgloss.Color("#8B4513") // Warm trunk brown
 	accentPurple = lipgloss.Color("#C792EA") // Charm purple accent
 	softCyan     = lipgloss.Color("#89DDFF") // Soft cyan highlight
 	mutedGray    = lipgloss.Color("#8F8F8F") // Elegant gray

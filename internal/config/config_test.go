@@ -84,6 +84,38 @@ func TestParseDuration(t *testing.T) {
 			want:    3600 * time.Second,
 			wantErr: false,
 		},
+		// Months (M = uppercase for months, m = lowercase for minutes)
+		{
+			name:    "1 month",
+			input:   "1M",
+			want:    30 * 24 * time.Hour, // Approximate: 30 days
+			wantErr: false,
+		},
+		{
+			name:    "12 months",
+			input:   "12M",
+			want:    365 * 24 * time.Hour, // Approximate: 365 days
+			wantErr: false,
+		},
+		{
+			name:    "6 months",
+			input:   "6M",
+			want:    180 * 24 * time.Hour, // Approximate: 180 days
+			wantErr: false,
+		},
+		// Years
+		{
+			name:    "1 year",
+			input:   "1y",
+			want:    365 * 24 * time.Hour,
+			wantErr: false,
+		},
+		{
+			name:    "2 years",
+			input:   "2y",
+			want:    730 * 24 * time.Hour, // 2 * 365 days
+			wantErr: false,
+		},
 		// Standard Go duration format (fallback)
 		{
 			name:    "go format - hours",
@@ -293,7 +325,8 @@ func TestLoadConfig(t *testing.T) {
 	// without errors (it will use defaults if no file is found)
 	cfg := LoadConfig()
 	if cfg == nil {
-		t.Error("LoadConfig() returned nil")
+		t.Fatal("LoadConfig() returned nil")
+		return
 	}
 
 	// Should have default values
