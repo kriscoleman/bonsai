@@ -1,0 +1,23 @@
+# Bonsai Configuration File Example
+# Copy this to .bonsai.yaml in your home directory or project root
+
+# Local branch settings
+local:
+  # Age threshold for considering local branches stale
+  # Supports: weeks (w), days (d), hours (h), minutes (m), seconds (s)
+  # Examples: 2w, 14d, 336h
+  age_threshold: "2w"
+
+# Remote branch settings
+remote:
+  # Age threshold for considering remote branches stale
+  age_threshold: "4w"
+
+  # Default remote name to use
+  remote_name: "origin"
+
+# Branches that should never be deleted (in addition to main/master/develop)
+protected_branches:
+  - "production"
+  - "staging"
+  # Add more branches as needed
