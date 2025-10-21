@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/kriscoleman/bonsai/compare/v1.0.0...v1.0.1) (2025-10-21)
+
+
+### Bug Fixes
+
+* duration parsing ([22ff0a0](https://github.com/kriscoleman/bonsai/commit/22ff0a0a70903387d46862a3405dabd94a263b6b))
+
 ## 1.0.0 (2025-10-21)
 
 
