@@ -265,7 +265,7 @@ func confirmBulkDeletion(count int) bool {
 	fmt.Print(promptStyle.Render("Proceed with pruning? (y/N) "))
 
 	var response string
-	fmt.Scanln(&response)
+	_, _ = fmt.Scanln(&response) // Ignore error - empty input is valid (defaults to No)
 
 	return response == "y" || response == "Y" || response == "yes"
 }

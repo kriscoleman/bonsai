@@ -30,10 +30,18 @@ func DefaultConfig() *Config {
 }
 
 // ParseDuration parses a duration string with support for various formats
-// Supported formats: 2w, 14d, 336h, 20160m, etc.
+// Supported formats:
+//   - Years: 1y, 2y (365 days per year)
+//   - Months: 1M, 12M (30 days for 1-11 months, 365 days for 12 months)
+//   - Weeks: 2w, 4w
+//   - Days: 14d, 30d
+//   - Hours: 336h
+//   - Minutes: 60m (lowercase m for minutes)
+//   - Seconds: 3600s
 func ParseDuration(s string) (time.Duration, error) {
-	// Match patterns like "2w", "14d", "336h"
-	re := regexp.MustCompile(`^(\d+)([wdhms])$`)
+	// Match patterns like "2w", "14d", "336h", "1y", "12M"
+	// Note: M (uppercase) = months, m (lowercase) = minutes
+	re := regexp.MustCompile(`^(\d+)([yMwdhms])$`)
 	matches := re.FindStringSubmatch(s)
 
 	if matches == nil {
@@ -49,6 +57,15 @@ func ParseDuration(s string) (time.Duration, error) {
 	unit := matches[2]
 
 	switch unit {
+	case "y":
+		// 1 year = 365 days
+		return time.Duration(value) * 365 * 24 * time.Hour, nil
+	case "M":
+		// Months: use 30 days per month for 1-11 months, 365 days for 12 months
+		if value == 12 {
+			return 365 * 24 * time.Hour, nil
+		}
+		return time.Duration(value) * 30 * 24 * time.Hour, nil
 	case "w":
 		return time.Duration(value) * 7 * 24 * time.Hour, nil
 	case "d":
@@ -56,6 +73,7 @@ func ParseDuration(s string) (time.Duration, error) {
 	case "h":
 		return time.Duration(value) * time.Hour, nil
 	case "m":
+		// lowercase m = minutes
 		return time.Duration(value) * time.Minute, nil
 	case "s":
 		return time.Duration(value) * time.Second, nil
