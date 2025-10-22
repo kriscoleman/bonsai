@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/kriscoleman/bonsai/compare/v1.0.1...v1.1.0) (2025-10-22)
+
+
+### Features
+
+* adds verbose and force delete options ([b3b2339](https://github.com/kriscoleman/bonsai/commit/b3b233952c3c10132f9139c5131fc849ea29ecba))
+
 ## [1.0.1](https://github.com/kriscoleman/bonsai/compare/v1.0.0...v1.0.1) (2025-10-21)
 
 
