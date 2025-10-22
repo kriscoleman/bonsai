@@ -16,20 +16,26 @@ var (
 
 	// Bonsai ASCII art
 	bonsaiArt = `
-    🌳
-   ╱│╲
-  ╱ │ ╲
- ╱  │  ╲
-    ║
-    ║
-  ══╩══
+           ,.,
+      MMMM_    ,..,
+        "_ "__"MMMMM          ,...,,
+ ,..., __." --"    ,.,     _-"MMMMMMM
+MMMMMM"___ "_._   MMM"_."" _ """"""
+ """""    "" , \_.   "_. ."
+        ,., _"__ \__./ ."
+       MMMMM_"  "_    ./
+        ''''      (    )
+ ._______________.-'____"---._.
+  \                          /
+   \________________________/
+   (_)                    (_)
 `
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "bonsai",
-	Short: "🌳 The Art of Branch Pruning",
-	Long: renderLongDescription(),
+	Use:     "bonsai",
+	Short:   "🌳 The Art of Branch Pruning",
+	Long:    renderLongDescription(),
 	Version: "0.1.0",
 }
 

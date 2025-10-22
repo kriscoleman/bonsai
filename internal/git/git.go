@@ -184,8 +184,15 @@ func (r *Repository) DeleteLocalBranch(branchName string, force bool) error {
 		cmd.Dir = r.Path
 	}
 
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to delete local branch %s: %w", branchName, err)
+	// Use CombinedOutput to capture both stdout and stderr
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		// Parse git's error message from output
+		errorMsg := strings.TrimSpace(string(output))
+		if errorMsg == "" {
+			errorMsg = err.Error()
+		}
+		return fmt.Errorf("%s", errorMsg)
 	}
 
 	return nil
@@ -198,8 +205,15 @@ func (r *Repository) DeleteRemoteBranch(remote, branchName string) error {
 		cmd.Dir = r.Path
 	}
 
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to delete remote branch %s/%s: %w", remote, branchName, err)
+	// Use CombinedOutput to capture both stdout and stderr
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		// Parse git's error message from output
+		errorMsg := strings.TrimSpace(string(output))
+		if errorMsg == "" {
+			errorMsg = err.Error()
+		}
+		return fmt.Errorf("%s", errorMsg)
 	}
 
 	return nil
