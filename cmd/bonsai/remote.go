@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/kriscoleman-testifysec/bonsai/internal/config"
-	"github.com/kriscoleman-testifysec/bonsai/internal/git"
-	"github.com/kriscoleman-testifysec/bonsai/internal/ui"
+	"github.com/kriscoleman/bonsai/internal/config"
+	"github.com/kriscoleman/bonsai/internal/git"
+	"github.com/kriscoleman/bonsai/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +22,7 @@ var (
 var remoteCmd = &cobra.Command{
 	Use:   "remote",
 	Short: "🌍 Prune stale remote branches",
-	Long:  `🌍 Prune stale remote branches
+	Long: `🌍 Prune stale remote branches
 
 Identify and carefully remove remote branches that have stopped growing.
 Maintain your shared repository with the same dedication and artistry

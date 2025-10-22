@@ -10,7 +10,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/kriscoleman-testifysec/bonsai/internal/git"
+	"github.com/kriscoleman/bonsai/internal/git"
 )
 
 var (
