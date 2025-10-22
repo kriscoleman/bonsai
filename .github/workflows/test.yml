@@ -70,5 +70,5 @@ jobs:
 
       - name: Verify binary
         run: |
-          ./build/bonsai --version
-          ./build/bonsai --help
+          ./bin/bonsai --version
+          ./bin/bonsai --help

@@ -142,7 +142,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 ```bash
 make build
-# Binary will be available at ./build/bonsai
+# Binary will be available at ./bin/bonsai
 ```
 
 **GitHub Action:**
