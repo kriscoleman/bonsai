@@ -1,4 +1,4 @@
-module github.com/kriscoleman-testifysec/bonsai
+module github.com/kriscoleman/bonsai
 
 go 1.24.1
 

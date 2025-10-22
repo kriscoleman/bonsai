@@ -74,10 +74,10 @@ If you need to manually trigger a release:
 npm install -g release-please
 
 # Create a release PR manually
-release-please release-pr --token=$GITHUB_TOKEN --repo-url=kriscoleman-testifysec/bonsai
+release-please release-pr --token=$GITHUB_TOKEN --repo-url=kriscoleman/bonsai
 
 # Create a GitHub release manually
-release-please github-release --token=$GITHUB_TOKEN --repo-url=kriscoleman-testifysec/bonsai
+release-please github-release --token=$GITHUB_TOKEN --repo-url=kriscoleman/bonsai
 ```
 
 ## Testing GoReleaser Locally

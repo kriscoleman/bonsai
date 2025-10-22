@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/kriscoleman-testifysec/bonsai/internal/config"
-	"github.com/kriscoleman-testifysec/bonsai/internal/git"
-	"github.com/kriscoleman-testifysec/bonsai/internal/ui"
+	"github.com/kriscoleman/bonsai/internal/config"
+	"github.com/kriscoleman/bonsai/internal/git"
+	"github.com/kriscoleman/bonsai/internal/ui"
 	"github.com/spf13/cobra"
 )
 
