@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
@@ -12,9 +13,11 @@ import (
 )
 
 var (
-	localBulk   bool
-	localAge    string
-	localDryRun bool
+	localBulk    bool
+	localAge     string
+	localDryRun  bool
+	localVerbose bool
+	localForce   bool
 )
 
 var localCmd = &cobra.Command{
@@ -34,6 +37,8 @@ func init() {
 	localCmd.Flags().BoolVar(&localBulk, "bulk", false, "Delete all stale branches without interaction")
 	localCmd.Flags().StringVar(&localAge, "age", "2w", "Age threshold for stale branches (e.g., 2w, 14d, 336h)")
 	localCmd.Flags().BoolVar(&localDryRun, "dry-run", false, "Show what would be deleted without actually deleting")
+	localCmd.Flags().BoolVarP(&localVerbose, "verbose", "v", false, "Show detailed error messages")
+	localCmd.Flags().BoolVarP(&localForce, "force", "f", false, "Force delete branches (git branch -D) even if not fully merged")
 }
 
 func runLocalCleanup(cmd *cobra.Command, args []string) error {
@@ -89,10 +94,10 @@ func runLocalCleanup(cmd *cobra.Command, args []string) error {
 	}
 
 	if localBulk {
-		return runBulkDeletion(repo, staleBranches, false)
+		return runBulkDeletion(repo, staleBranches, false, localVerbose, localForce)
 	}
 
-	return ui.RunInteractiveSelection(repo, staleBranches, false)
+	return ui.RunInteractiveSelection(repo, staleBranches, false, localVerbose, localForce)
 }
 
 func filterStaleBranches(branches []*git.Branch, threshold time.Duration) []*git.Branch {
@@ -180,7 +185,7 @@ func printBranchSummary(branches []*git.Branch, branchType string, threshold tim
 	}
 }
 
-func runBulkDeletion(repo *git.Repository, branches []*git.Branch, isRemote bool) error {
+func runBulkDeletion(repo *git.Repository, branches []*git.Branch, isRemote bool, verbose bool, force bool) error {
 	// Confirm bulk deletion
 	if !confirmBulkDeletion(len(branches)) {
 		cancelStyle := lipgloss.NewStyle().
@@ -201,17 +206,23 @@ func runBulkDeletion(repo *git.Repository, branches []*git.Branch, isRemote bool
 
 	successCount := 0
 	errorCount := 0
+	var errorDetails []string
 
 	for _, branch := range branches {
 		var err error
 		if isRemote {
 			err = repo.DeleteRemoteBranch(branch.RemoteName, branch.Name)
 		} else {
-			err = repo.DeleteLocalBranch(branch.Name, false)
+			err = repo.DeleteLocalBranch(branch.Name, force)
 		}
 
 		if err != nil {
-			fmt.Println(errorStyle.Render(fmt.Sprintf("  ✗ Failed to prune %s: %v", branch.FullName(), err)))
+			errorMsg := fmt.Sprintf("  ✗ Failed to prune %s", branch.FullName())
+			if verbose {
+				errorMsg = fmt.Sprintf("  ✗ Failed to prune %s: %v", branch.FullName(), err)
+			}
+			fmt.Println(errorStyle.Render(errorMsg))
+			errorDetails = append(errorDetails, fmt.Sprintf("%s: %v", branch.FullName(), err))
 			errorCount++
 		} else {
 			fmt.Println(successStyle.Render(fmt.Sprintf("  ✓ Pruned %s", branch.FullName())))
@@ -236,6 +247,48 @@ func runBulkDeletion(repo *git.Repository, branches []*git.Branch, isRemote bool
 		fmt.Sprintf("   %d branches removed, %d failed", successCount, errorCount))
 
 	fmt.Println(summaryBox.Render(summaryStyle.Render(content)))
+
+	// Show detailed error summary if verbose and there were errors
+	if verbose && errorCount > 0 {
+		fmt.Println()
+		debugStyle := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#FF6B6B")).
+			Bold(true)
+		fmt.Println(debugStyle.Render("Detailed Error Report:"))
+		fmt.Println()
+
+		detailStyle := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#8F8F8F"))
+
+		unmergedCount := 0
+		for i, detail := range errorDetails {
+			fmt.Println(detailStyle.Render(fmt.Sprintf("  %d. %s", i+1, detail)))
+			if strings.Contains(detail, "not fully merged") {
+				unmergedCount++
+			}
+		}
+		fmt.Println()
+
+		// Suggest using --force if branches aren't merged
+		if !force && unmergedCount > 0 {
+			hintStyle := lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#FFD43B")).
+				Italic(true)
+
+			hintBox := lipgloss.NewStyle().
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("#89DDFF")).
+				Padding(0, 1).
+				MarginBottom(1)
+
+			hint := lipgloss.JoinVertical(lipgloss.Left,
+				fmt.Sprintf("💡 %d branch(es) failed because they're not fully merged.", unmergedCount),
+				"   To force delete unmerged branches, use the --force flag:",
+				"   bonsai local --bulk --force")
+
+			fmt.Println(hintBox.Render(hintStyle.Render(hint)))
+		}
+	}
 
 	return nil
 }

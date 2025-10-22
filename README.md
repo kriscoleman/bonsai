@@ -157,6 +157,7 @@ bonsai remote --bulk --age 4w
 | `bonsai local --dry-run` | Preview what would be deleted (safe!) |
 | `bonsai local --bulk` | Delete all stale local branches at once |
 | `bonsai remote --bulk` | Delete all stale remote branches at once |
+| `bonsai local --bulk -v` | Show detailed error messages for failed deletions |
 
 ### Fine-Tune Your Pruning
 
@@ -182,6 +183,27 @@ bonsai remote --remote upstream
 
 # Chain multiple options together
 bonsai remote --remote upstream --age 4w --dry-run
+```
+
+**Debugging & Force Deletion**:
+
+```bash
+# Show detailed error messages when deletions fail
+bonsai local --bulk --verbose
+bonsai local --bulk -v  # Short form
+
+# Verbose mode shows:
+# - Full git error messages for each failed deletion
+# - Detailed error report at the end
+# - Smart suggestions (e.g., use --force for unmerged branches)
+
+# Force delete unmerged branches (equivalent to git branch -D)
+bonsai local --force
+bonsai local -f  # Short form
+
+# Combine flags for maximum control
+bonsai local --bulk --force --verbose  # Force delete all, show details
+bonsai local -bfv --age 1y             # Short form: bulk + force + verbose
 ```
 
 ---

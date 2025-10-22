@@ -130,19 +130,23 @@ func (i branchItem) Description() string {
 }
 
 type model struct {
-	list     list.Model
-	repo     *git.Repository
-	branches []*git.Branch
-	items    []branchItem
-	isRemote bool
-	quitting bool
-	deleting bool
-	message  string
+	list         list.Model
+	repo         *git.Repository
+	branches     []*git.Branch
+	items        []branchItem
+	isRemote     bool
+	verbose      bool
+	force        bool
+	quitting     bool
+	deleting     bool
+	message      string
+	errorDetails []string
 }
 
 type deleteCompleteMsg struct {
-	success int
-	failed  int
+	success      int
+	failed       int
+	errorDetails []string
 }
 
 func (m model) Init() tea.Cmd {
@@ -203,6 +207,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case deleteCompleteMsg:
 		m.message = fmt.Sprintf("Deleted %d branch(es), %d failed", msg.success, msg.failed)
+		m.errorDetails = msg.errorDetails
 		m.quitting = true
 		return m, tea.Quit
 	}
@@ -225,7 +230,55 @@ func (m model) View() string {
 				MarginTop(1).
 				MarginBottom(1)
 
-			return "\n" + box.Render(content) + "\n"
+			result := "\n" + box.Render(content) + "\n"
+
+			// Show detailed error report if verbose and there were errors
+			if m.verbose && len(m.errorDetails) > 0 {
+				result += "\n"
+				debugStyle := lipgloss.NewStyle().
+					Foreground(warningRed).
+					Bold(true)
+				result += debugStyle.Render("Detailed Error Report:") + "\n\n"
+
+				detailStyle := lipgloss.NewStyle().
+					Foreground(mutedGray)
+
+				unmergedCount := 0
+				for i, detail := range m.errorDetails {
+					result += detailStyle.Render(fmt.Sprintf("  %d. %s", i+1, detail)) + "\n"
+					if strings.Contains(detail, "not fully merged") {
+						unmergedCount++
+					}
+				}
+				result += "\n"
+
+				// Suggest using --force if branches aren't merged
+				if !m.force && unmergedCount > 0 {
+					hintStyle := lipgloss.NewStyle().
+						Foreground(lipgloss.Color("#FFD43B")).
+						Italic(true)
+
+					hintBox := lipgloss.NewStyle().
+						Border(lipgloss.RoundedBorder()).
+						BorderForeground(softCyan).
+						Padding(0, 1).
+						MarginBottom(1)
+
+					branchType := "local"
+					if m.isRemote {
+						branchType = "remote"
+					}
+
+					hint := lipgloss.JoinVertical(lipgloss.Left,
+						fmt.Sprintf("💡 %d branch(es) failed because they're not fully merged.", unmergedCount),
+						"   To force delete unmerged branches, use the --force flag:",
+						fmt.Sprintf("   bonsai %s --force", branchType))
+
+					result += hintBox.Render(hintStyle.Render(hint)) + "\n"
+				}
+			}
+
+			return result
 		}
 
 		cancelMsg := lipgloss.NewStyle().
@@ -282,20 +335,22 @@ func (m model) getSelectedBranches() []*git.Branch {
 	return selected
 }
 
-func (m model) deleteBranches(branches []*git.Branch) tea.Cmd {
+func (m *model) deleteBranches(branches []*git.Branch) tea.Cmd {
 	return func() tea.Msg {
 		successCount := 0
 		errorCount := 0
+		var errorDetails []string
 
 		for _, branch := range branches {
 			var err error
 			if m.isRemote {
 				err = m.repo.DeleteRemoteBranch(branch.RemoteName, branch.Name)
 			} else {
-				err = m.repo.DeleteLocalBranch(branch.Name, false)
+				err = m.repo.DeleteLocalBranch(branch.Name, m.force)
 			}
 
 			if err != nil {
+				errorDetails = append(errorDetails, fmt.Sprintf("%s: %v", branch.FullName(), err))
 				errorCount++
 			} else {
 				successCount++
@@ -303,8 +358,9 @@ func (m model) deleteBranches(branches []*git.Branch) tea.Cmd {
 		}
 
 		return deleteCompleteMsg{
-			success: successCount,
-			failed:  errorCount,
+			success:      successCount,
+			failed:       errorCount,
+			errorDetails: errorDetails,
 		}
 	}
 }
@@ -339,7 +395,7 @@ func formatAge(duration time.Duration) string {
 }
 
 // RunInteractiveSelection starts the interactive branch selection UI
-func RunInteractiveSelection(repo *git.Repository, branches []*git.Branch, isRemote bool) error {
+func RunInteractiveSelection(repo *git.Repository, branches []*git.Branch, isRemote bool, verbose bool, force bool) error {
 	items := make([]list.Item, len(branches))
 	branchItems := make([]branchItem, len(branches))
 
@@ -397,6 +453,8 @@ func RunInteractiveSelection(repo *git.Repository, branches []*git.Branch, isRem
 		branches: branches,
 		items:    branchItems,
 		isRemote: isRemote,
+		verbose:  verbose,
+		force:    force,
 	}
 
 	p := tea.NewProgram(m)
