@@ -1,0 +1,94 @@
+name: Bonsai Branch Cleanup
+
+# This is a reusable workflow that can be called from other repositories
+# See: https://docs.github.com/en/actions/using-workflows/reusing-workflows
+
+on:
+  workflow_call:
+    inputs:
+      mode:
+        description: 'Cleanup mode: local or remote'
+        type: string
+        required: false
+        default: 'remote'
+
+      age:
+        description: 'Age threshold for stale branches (e.g., 4w, 30d, 1y, 12M)'
+        type: string
+        required: false
+        default: '4w'
+
+      remote-name:
+        description: 'Remote name to clean up (for remote mode)'
+        type: string
+        required: false
+        default: 'origin'
+
+      dry-run:
+        description: 'Preview mode - no actual deletions'
+        type: boolean
+        required: false
+        default: false
+
+      force:
+        description: 'Force delete unmerged branches'
+        type: boolean
+        required: false
+        default: false
+
+      config-file:
+        description: 'Path to .bonsai.yaml config file'
+        type: string
+        required: false
+        default: ''
+
+    outputs:
+      deleted-count:
+        description: 'Number of branches deleted'
+        value: ${{ jobs.cleanup.outputs.deleted }}
+
+      failed-count:
+        description: 'Number of branches that failed to delete'
+        value: ${{ jobs.cleanup.outputs.failed }}
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    outputs:
+      deleted: ${{ steps.bonsai.outputs.deleted-count }}
+      failed: ${{ steps.bonsai.outputs.failed-count }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all branches and history
+
+      - name: Run Bonsai cleanup
+        id: bonsai
+        uses: kriscoleman/bonsai@v1
+        with:
+          mode: ${{ inputs.mode }}
+          age: ${{ inputs.age }}
+          remote-name: ${{ inputs.remote-name }}
+          dry-run: ${{ inputs.dry-run }}
+          force: ${{ inputs.force }}
+          config-file: ${{ inputs.config-file }}
+
+      - name: Summary
+        run: |
+          echo "## 🌳 Bonsai Branch Cleanup Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Deleted**: ${{ steps.bonsai.outputs.deleted-count }} branch(es)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Failed**: ${{ steps.bonsai.outputs.failed-count }} branch(es)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Mode**: ${{ inputs.mode }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Age Threshold**: ${{ inputs.age }}" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ inputs.dry-run }}" = "true" ]; then
+            echo "- **Status**: 🔍 Preview mode (no changes made)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Status**: ✅ Cleanup complete" >> $GITHUB_STEP_SUMMARY
+          fi

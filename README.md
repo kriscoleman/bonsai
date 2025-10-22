@@ -77,6 +77,22 @@ Optimized Git operations handle repositories with hundreds of branches without b
 
 </td>
 </tr>
+<tr>
+<td width="33%" valign="top">
+
+### 🤖 **GitHub Action**
+
+Automate cleanup in CI/CD with our reusable workflow. Perfect for trunk-based development!
+
+</td>
+<td colspan="2" valign="top">
+
+### 📦 **Multiple Distribution Methods**
+
+Available as CLI tool, GitHub Action, and reusable workflow—use however you prefer.
+
+</td>
+</tr>
 </table>
 
 ---
@@ -128,6 +144,19 @@ export PATH="$HOME/.local/bin:$PATH"
 make build
 # Binary will be available at ./build/bonsai
 ```
+
+**GitHub Action:**
+
+Automate branch cleanup in your CI/CD workflows:
+
+```yaml
+- uses: kriscoleman/bonsai@v1
+  with:
+    mode: 'remote'
+    age: '4w'
+```
+
+See [ACTION.md](ACTION.md) for complete GitHub Action documentation.
 
 ### Your First Pruning Session
 
@@ -203,7 +232,9 @@ bonsai local -f  # Short form
 
 # Combine flags for maximum control
 bonsai local --bulk --force --verbose  # Force delete all, show details
-bonsai local -bfv --age 1y             # Short form: bulk + force + verbose
+
+# For CI/CD - skip confirmation prompts
+bonsai local --bulk --no-prompt  # Safe for automated workflows
 ```
 
 ---

@@ -11,12 +11,13 @@ import (
 )
 
 var (
-	remoteBulk    bool
-	remoteAge     string
-	remoteDryRun  bool
-	remoteName    string
-	remoteVerbose bool
-	remoteForce   bool
+	remoteBulk     bool
+	remoteAge      string
+	remoteDryRun   bool
+	remoteName     string
+	remoteVerbose  bool
+	remoteForce    bool
+	remoteNoPrompt bool
 )
 
 var remoteCmd = &cobra.Command{
@@ -39,6 +40,7 @@ func init() {
 	remoteCmd.Flags().StringVar(&remoteName, "remote", "origin", "Remote name to clean up")
 	remoteCmd.Flags().BoolVarP(&remoteVerbose, "verbose", "v", false, "Show detailed error messages")
 	remoteCmd.Flags().BoolVarP(&remoteForce, "force", "f", false, "Force delete branches even if not fully merged")
+	remoteCmd.Flags().BoolVar(&remoteNoPrompt, "no-prompt", false, "Skip confirmation prompts (for CI/CD)")
 }
 
 func runRemoteCleanup(cmd *cobra.Command, args []string) error {
@@ -94,7 +96,7 @@ func runRemoteCleanup(cmd *cobra.Command, args []string) error {
 	}
 
 	if remoteBulk {
-		return runBulkDeletion(repo, staleBranches, true, remoteVerbose, remoteForce)
+		return runBulkDeletion(repo, staleBranches, true, remoteVerbose, remoteForce, remoteNoPrompt)
 	}
 
 	return ui.RunInteractiveSelection(repo, staleBranches, true, remoteVerbose, remoteForce)

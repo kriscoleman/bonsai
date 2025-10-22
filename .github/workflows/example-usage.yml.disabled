@@ -1,0 +1,49 @@
+# Example workflow showing how to use Bonsai in your repository
+# To use this:
+# 1. Copy this file to your repo's .github/workflows/ directory
+# 2. Rename it (remove .disabled extension)
+# 3. Customize the schedule and parameters as needed
+
+name: Weekly Branch Cleanup
+
+on:
+  schedule:
+    # Run every Sunday at midnight UTC
+    - cron: '0 0 * * 0'
+
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Dry run (preview only)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write  # Required to delete branches
+
+jobs:
+  # Option 1: Use the reusable workflow (recommended)
+  cleanup-with-reusable:
+    uses: kriscoleman/bonsai/.github/workflows/cleanup-branches.yml@v1
+    with:
+      mode: 'remote'
+      age: '4w'
+      dry-run: ${{ github.event.inputs.dry-run || false }}
+
+  # Option 2: Use the action directly (more control)
+  cleanup-with-action:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prune stale branches
+        uses: kriscoleman/bonsai@v1
+        with:
+          mode: 'remote'
+          age: '4w'
+          remote-name: 'origin'
+          dry-run: ${{ github.event.inputs.dry-run || false }}

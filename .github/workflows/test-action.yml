@@ -1,0 +1,62 @@
+name: Test Action
+
+on:
+  pull_request:
+    paths:
+      - 'action.yml'
+      - 'Dockerfile'
+      - 'entrypoint.sh'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test-action-dry-run:
+    name: Test Action (Dry Run)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Test bonsai action (dry-run)
+        id: bonsai-test
+        uses: ./
+        with:
+          mode: 'remote'
+          age: '4w'
+          dry-run: 'true'
+
+      - name: Display results
+        run: |
+          echo "Deleted: ${{ steps.bonsai-test.outputs.deleted-count }}"
+          echo "Failed: ${{ steps.bonsai-test.outputs.failed-count }}"
+
+  test-action-config:
+    name: Test Action (With Config)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create test config
+        run: |
+          cat > .bonsai.yaml <<EOF
+          remote:
+            age_threshold: "8w"
+            remote_name: "origin"
+          protected_branches:
+            - "main"
+            - "develop"
+          EOF
+
+      - name: Test with config file
+        uses: ./
+        with:
+          mode: 'remote'
+          config-file: '.bonsai.yaml'
+          dry-run: 'true'
