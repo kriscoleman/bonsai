@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/kriscoleman/bonsai/compare/v1.1.0...v1.1.1) (2025-10-22)
+
+
+### Bug Fixes
+
+* updates module path and github owner ([e4d9c6f](https://github.com/kriscoleman/bonsai/commit/e4d9c6fdae60d980e7eaa853f2c47bd47b38ac52))
+
 ## [1.1.0](https://github.com/kriscoleman/bonsai/compare/v1.0.1...v1.1.0) (2025-10-22)
 
 
