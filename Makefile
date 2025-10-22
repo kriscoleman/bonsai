@@ -4,7 +4,7 @@
 BINARY_NAME=bonsai
 
 # Build directory
-BUILD_DIR=build
+BUILD_DIR=bin
 
 # Installation directory (user's local bin)
 INSTALL_DIR=$(HOME)/.local/bin

@@ -13,11 +13,12 @@ import (
 )
 
 var (
-	localBulk    bool
-	localAge     string
-	localDryRun  bool
-	localVerbose bool
-	localForce   bool
+	localBulk     bool
+	localAge      string
+	localDryRun   bool
+	localVerbose  bool
+	localForce    bool
+	localNoPrompt bool
 )
 
 var localCmd = &cobra.Command{
@@ -39,6 +40,7 @@ func init() {
 	localCmd.Flags().BoolVar(&localDryRun, "dry-run", false, "Show what would be deleted without actually deleting")
 	localCmd.Flags().BoolVarP(&localVerbose, "verbose", "v", false, "Show detailed error messages")
 	localCmd.Flags().BoolVarP(&localForce, "force", "f", false, "Force delete branches (git branch -D) even if not fully merged")
+	localCmd.Flags().BoolVar(&localNoPrompt, "no-prompt", false, "Skip confirmation prompts (for CI/CD)")
 }
 
 func runLocalCleanup(cmd *cobra.Command, args []string) error {
@@ -94,7 +96,7 @@ func runLocalCleanup(cmd *cobra.Command, args []string) error {
 	}
 
 	if localBulk {
-		return runBulkDeletion(repo, staleBranches, false, localVerbose, localForce)
+		return runBulkDeletion(repo, staleBranches, false, localVerbose, localForce, localNoPrompt)
 	}
 
 	return ui.RunInteractiveSelection(repo, staleBranches, false, localVerbose, localForce)
@@ -185,9 +187,9 @@ func printBranchSummary(branches []*git.Branch, branchType string, threshold tim
 	}
 }
 
-func runBulkDeletion(repo *git.Repository, branches []*git.Branch, isRemote bool, verbose bool, force bool) error {
-	// Confirm bulk deletion
-	if !confirmBulkDeletion(len(branches)) {
+func runBulkDeletion(repo *git.Repository, branches []*git.Branch, isRemote bool, verbose bool, force bool, noPrompt bool) error {
+	// Confirm bulk deletion (unless --no-prompt is used)
+	if !noPrompt && !confirmBulkDeletion(len(branches)) {
 		cancelStyle := lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#8F8F8F")).
 			Italic(true)

@@ -1,0 +1,43 @@
+# 🌳 Bonsai Branch Cleanup - Starter Workflow
+# Copy this file to your repository's .github/workflows/bonsai-cleanup.yml
+
+name: 🌳 Bonsai Branch Cleanup
+
+on:
+  # Run weekly on Sundays at midnight UTC
+  schedule:
+    - cron: '0 0 * * 0'
+
+  # Allow manual triggering with dry-run option
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Preview mode (no actual deletions)'
+        type: boolean
+        default: true
+        required: false
+
+permissions:
+  contents: write  # Required to delete branches
+
+jobs:
+  cleanup:
+    name: Prune Stale Branches
+    # Use the reusable workflow from Bonsai
+    uses: kriscoleman/bonsai/.github/workflows/cleanup-branches.yml@v1
+    with:
+      mode: 'remote'
+      age: '4w'  # Customize: Delete branches older than 4 weeks
+      remote-name: 'origin'
+      dry-run: ${{ github.event.inputs.dry-run || false }}
+      force: false  # Set to true to force delete unmerged branches
+
+# That's it! Customize the parameters above to match your workflow.
+#
+# Common configurations:
+# - Fast-moving teams: age: '2w'
+# - Slower teams: age: '8w' or '3M'
+# - Long-lived features: age: '6M' or '1y'
+#
+# Time units supported:
+# y (years), M (months), w (weeks), d (days), h (hours), m (minutes), s (seconds)

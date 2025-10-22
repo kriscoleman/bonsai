@@ -1,0 +1,64 @@
+name: 'Bonsai Branch Cleanup'
+description: 'Automatically prune stale Git branches with the elegance of bonsai cultivation'
+author: 'Kris Coleman'
+
+branding:
+  icon: 'git-branch'
+  color: 'green'
+
+inputs:
+  mode:
+    description: 'Cleanup mode: "local" or "remote"'
+    required: false
+    default: 'remote'
+
+  age:
+    description: 'Age threshold for stale branches (e.g., 4w, 30d, 1y, 12M)'
+    required: false
+    default: '4w'
+
+  remote-name:
+    description: 'Name of the remote to clean up (for remote mode)'
+    required: false
+    default: 'origin'
+
+  dry-run:
+    description: 'Preview what would be deleted without making changes'
+    required: false
+    default: 'false'
+
+  force:
+    description: 'Force delete branches even if not fully merged (git branch -D)'
+    required: false
+    default: 'false'
+
+  config-file:
+    description: 'Path to bonsai config file (e.g., .bonsai.yaml)'
+    required: false
+    default: ''
+
+  github-token:
+    description: 'GitHub token for authentication (defaults to GITHUB_TOKEN)'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  deleted-count:
+    description: 'Number of branches successfully deleted'
+
+  failed-count:
+    description: 'Number of branches that failed to delete'
+
+  branch-list:
+    description: 'JSON array of deleted branch names'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.mode }}
+    - ${{ inputs.age }}
+    - ${{ inputs.remote-name }}
+    - ${{ inputs.dry-run }}
+    - ${{ inputs.force }}
+    - ${{ inputs.config-file }}

@@ -13,6 +13,7 @@
 coverage.html
 
 # Build directory
+bin/
 build/
 
 # Local configuration files
